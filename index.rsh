@@ -41,11 +41,11 @@ export const main = Reach.App(
     invariant(balance() == 0)
     while (balance(token) > 0) {
       commit()
-      TicketBuyer.only(() => {
+      TicketBuyer.only(() => {  
         interact.buyTicket()
       })
       TicketBuyer.pay(ticketPrice)
-      transfer(ticketPrice).to(TicketProvider)
+      transfer(ticketPrice).to(TicketProvider) 
       transfer(1, token).to(TicketBuyer)
       TicketProvider.only(() => {
         interact.getAvailableTickets(balance(token))
@@ -55,7 +55,6 @@ export const main = Reach.App(
       })
       continue
     }
-
     commit()
     exit()
   }

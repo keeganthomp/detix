@@ -86,7 +86,6 @@ const runProgram = async () => {
     getPurchasePrice: (ticketPrice, numberOfTickets) => 4,
     buyTicket: () => console.log('Buyer buys ticket'),
     checkIfBuyingMore: async () => {
-      // detatch from contract here
       const done = await ask(`Do you want to buy another ticket?`, yesno)
       if (!done) process.exit(0)
     },
