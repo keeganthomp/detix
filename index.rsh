@@ -29,7 +29,7 @@ export const main = Reach.App(
     })
 
     TicketProvider.publish(numberOfTicketsAvailable, token, ticketPrice).pay([
-      [100, token],
+      [numberOfTicketsAvailable, token],
     ])
     commit()
     TicketBuyer.publish()
