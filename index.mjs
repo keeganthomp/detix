@@ -1,6 +1,7 @@
 import { loadStdlib } from '@reach-sh/stdlib'
 import * as backend from './build/index.main.mjs'
 import launchToken from '@reach-sh/stdlib/launchToken.mjs'
+import { ask, yesno, done } from '@reach-sh/stdlib/ask.mjs'
 
 import optinToToken from './helpers/optinToToken.mjs'
 
@@ -52,8 +53,18 @@ const runProgram = async () => {
     stdlib.parseCurrency(MAX_NUMBER_OF_TICKETS)
   )
 
-  const ctcProvider = accountTicketProvider.deploy(backend)
-  const ctcBuyer = accountTicketBuyer.attach(backend, ctcProvider.getInfo())
+  let contract
+
+  const isDeployer = await ask(`Are you deployer`, yesno)
+
+  if (isDeployer) {
+    contract = accountTicketProvider.deploy(backend)
+    const info = await contract.getInfo()
+    console.log(`The contract is deployed as = ${JSON.stringify(info)}`)
+  } else {
+    const info = await ask(`Please paste the contract information:`, JSON.parse)
+    contract = accountTicketBuyer.attach(backend, info)
+  }
 
   const TicketProvider = {
     getMaxNumberOfTickets: () => {
@@ -63,7 +74,8 @@ const runProgram = async () => {
       return ticketToken.id
     },
     ticketPrice: stdlib.parseCurrency(3),
-    getNumberOfTickets: () => stdlib.parseCurrency(3),
+    getAvailableTickets: tickets =>
+      console.log('WOO', stdlib.bigNumberToNumber(tickets)),
   }
 
   const TicketBuyer = {
@@ -73,26 +85,24 @@ const runProgram = async () => {
     },
     getPurchasePrice: (ticketPrice, numberOfTickets) => 4,
     buyTicket: () => console.log('Buyer buys ticket'),
+    checkIfBuyingMore: async () => {
+      // detatch from contract here
+      const done = await ask(`Do you want to buy another ticket?`, yesno)
+      if (!done) process.exit(0)
+    },
   }
 
-  console.log('BEFOREEEEE')
-  console.log('providerAccountBalance', providerAccountBalance)
-  console.log('providerTicketBalance', providerTicketBalance)
-
-  await Promise.all([
-    backend.TicketProvider(ctcProvider, TicketProvider),
-    backend.TicketBuyer(ctcBuyer, TicketBuyer),
-  ])
+  if (isDeployer) {
+    await backend.TicketProvider(contract, TicketProvider)
+  } else {
+    await backend.TicketBuyer(contract, TicketBuyer)
+  }
 
   const providerAccountBalanceA = await getAccountBalance(accountTicketProvider)
   const providerTicketBalanceA = await getTokenBalance(
     ticketToken,
     accountTicketProvider
   )
-
-  console.log('AFTERRRRR')
-  console.log('providerAccountBalance', providerAccountBalanceA)
-  console.log('providerTicketBalance', providerTicketBalanceA)
 }
 
 runProgram()
