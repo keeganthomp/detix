@@ -84,3 +84,9 @@ services:
       - CFX_NETWORK_ID
   reach-app-ticketing-system-: *default-app
   reach-app-ticketing-system: *default-app
+    # After this is new!
+  participant: &participant
+    <<: *default-app
+    stdin_open: true
+  funder: *participant
+  buyer: *participant

@@ -11,14 +11,15 @@ const TicketBuyerInterface = {
   getTotal: Fun([UInt, UInt], UInt),
   getPurchasePrice: Fun([UInt, UInt], UInt),
   buyTicket: Fun([], Null),
-  checkIfBuyingMore: Fun([], Bool),
+  checkIfBuyingTicket: Fun([], Bool),
+  getAvailableTickets: Fun([UInt], Null),
 };
 
 export const main = Reach.App(
   {},
   [
-    Participant("TicketProvider", TicketProviderInterface),
-    Participant("TicketBuyer", TicketBuyerInterface),
+    Participant("TicketProvider", TicketProviderInterface), 
+    ParticipantClass("TicketBuyer", TicketBuyerInterface),
   ],
   (TicketProvider, TicketBuyer) => {
     TicketProvider.only(() => {
@@ -33,17 +34,12 @@ export const main = Reach.App(
     TicketProvider.publish(numberOfTicketsAvailable, token, ticketPrice).pay([
       [numberOfTicketsAvailable, token],
     ]);
-    require(numberOfTicketsAvailable > 0);
-
-    commit();
-
-    TicketBuyer.publish();
+    require(numberOfTicketsAvailable > 0); 
 
     // Until timeout, allow buyers to buy ticket
-    const [keepGoing, ticketsSold, hasPurchased] = parallelReduce([
+    const [keepGoing, ticketsSold] = parallelReduce([
       true,
       0,
-      false,
     ])
       .invariant(
         balance() == 0 &&
@@ -53,7 +49,7 @@ export const main = Reach.App(
       .case(
         TicketBuyer,
         (() => ({
-          when: !hasPurchased,
+          when: declassify(interact.checkIfBuyingTicket()),
         })),
         ((_) => ticketPrice),
         ((_) => {
@@ -62,15 +58,15 @@ export const main = Reach.App(
           require(balance(token) >= 1);
           transfer(1, token).to(buyer);
           transfer(ticketPrice).to(TicketProvider);
-          TicketProvider.only(() =>{
+          TicketBuyer.only(() =>{
             interact.getAvailableTickets(balance(token))
           })
-          return [balance(token) > 0, ticketsSold + 1, true];
+          return [balance(token) > 0, ticketsSold + 1];
         })
       )
-      .timeout(5, () => {
+      .timeout(100, () => {
         Anybody.publish();
-        return [false, ticketsSold, false];
+        return [false, ticketsSold];
       });
 
     transfer(balance(token), token).to(TicketProvider);

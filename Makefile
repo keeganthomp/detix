@@ -22,3 +22,11 @@ run-target: build
 .PHONY: down
 down:
 	docker-compose -f "docker-compose.yml" down --remove-orphans
+
+.PHONY: run-funder
+run-funder:
+	docker-compose run --rm funder
+
+.PHONY: run-buyer
+run-buyer:
+	docker-compose run --rm buyer
