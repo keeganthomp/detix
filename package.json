@@ -1,6 +1,7 @@
 {
   "name": "@reach-sh/ticketing-system",
   "type": "module",
+  "prettier": { "arrowParens": "always" },
   "dependencies": {
   },
   "author": "reach.sh",
