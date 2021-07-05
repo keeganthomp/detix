@@ -86,8 +86,9 @@ const runProgram = async () => {
     getPurchasePrice: (ticketPrice, numberOfTickets) => 4,
     buyTicket: () => console.log('Buyer buys ticket'),
     checkIfBuyingMore: async () => {
-      const done = await ask(`Do you want to buy another ticket?`, yesno)
-      if (!done) process.exit(0)
+      const isBuyingMore = await ask(`Do you want to buy another ticket?`, yesno)
+      if (isBuyingMore) return true
+      return false
     },
   }
 
