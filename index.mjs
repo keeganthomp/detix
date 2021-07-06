@@ -24,52 +24,7 @@ const runProgram = async () => {
 
   const ticketToken = await launchToken("coolTicket", "TIX");
 
-  console.log("TICKET", ticketToken);
-
-  const accountTicketProvider = await stdlib.newTestAccount(
-    providerStartingBalance
-  );
-  const accountTicketBuyer = await stdlib.newTestAccount(buyerStartingBalance);
-
-  // optin ticker provider account
-  await optinToToken({
-    stdlib,
-    account: accountTicketProvider,
-    token: ticketToken,
-  });
-  // optin buyer of ticket/token
-  await optinToToken({
-    stdlib,
-    account: accountTicketBuyer,
-    token: ticketToken,
-  });
-
-  const providerAccountBalance = await getAccountBalance(accountTicketProvider);
-  // const providerTicketBalance = await getTokenBalance(
-  //   ticketToken,
-  //   accountTicketProvider
-  // )
-
   let contract;
-
-  const isDeployer = await ask(`Are you deployer`, yesno);
-
-  if (isDeployer) {
-    // mint X amount of tokens to the Ticket Provider
-    await ticketToken.mint(
-      accountTicketProvider,
-      stdlib.parseCurrency(MAX_NUMBER_OF_TICKETS)
-    );
-    contract = accountTicketProvider.deploy(backend);
-    const info = await contract.getInfo();
-    console.log(`The contract is deployed as = ${JSON.stringify(info)}`);
-  } else {
-    const info = await ask(
-      `Please paste the contract information:`,
-      JSON.parse
-    );
-    contract = accountTicketBuyer.attach(backend, info);
-  }
 
   const TicketProvider = {
     getMaxNumberOfTickets: () => {
@@ -78,37 +33,77 @@ const runProgram = async () => {
     getToken: () => {
       return ticketToken.id;
     },
-    ticketPrice: stdlib.parseCurrency(3),
-    getAvailableTickets: (tickets) =>
+    ticketPrice: stdlib.parseCurrency(TICKET_PRICE),
+    showAvailableTickets: (tickets) =>
       console.log("Tickets Remaining: ", stdlib.bigNumberToNumber(tickets)),
   };
 
   const TicketBuyer = {
-    getTotal: (numberOfTickets) => {
-      const totalOwed = numberOfTickets * TICKET_PRICE;
-      return stdlib.parseCurrency(totalOwed);
-    },
-    getPurchasePrice: (ticketPrice, numberOfTickets) => 4,
     buyTicket: () => console.log("Buyer buys ticket"),
-    checkIfBuyingTicket: async () => {
-      const isBuyingMore = await ask(`Do you want to buy a ticket?`, yesno);
-      if (isBuyingMore) return true;
+    checkIfBuyingTicket: async (lastConsensusTime) => {
+      const currentNetworkTimeBigInt = await stdlib.getNetworkTime();
+      const currentNetworkTime = stdlib.bigNumberToNumber(
+        currentNetworkTimeBigInt
+      );
+      console.log(
+        "last Consensus Time:",
+        stdlib.bigNumberToNumber(lastConsensusTime)
+      );
+      console.log("current network time:", currentNetworkTime);
+      const isBuyingTicket = await ask(`Do you want to buy a ticket?`, yesno);
+      if (isBuyingTicket) return true;
       return false;
     },
-    getAvailableTickets: (tickets) => {
+    showAvailableTickets: (tickets) => {
       console.log("Tickets Remaining: ", stdlib.bigNumberToNumber(tickets));
     },
+    log: (data) => {
+      console.log("DATA", stdlib.bigNumberToNumber(data));
+    },
   };
+
+  const isDeployer = await ask(`Are you deployer`, yesno);
+
+  if (isDeployer) {
+    const accountTicketProvider = await stdlib.newTestAccount(
+      providerStartingBalance
+    );
+    // mint X amount of tokens to the Ticket Provider
+    await ticketToken.mint(
+      accountTicketProvider,
+      stdlib.parseCurrency(MAX_NUMBER_OF_TICKETS)
+    );
+    // optin ticker provider account
+    await optinToToken({
+      stdlib,
+      account: accountTicketProvider,
+      token: ticketToken,
+    });
+    contract = accountTicketProvider.deploy(backend);
+    const info = await contract.getInfo();
+    console.log(`The contract is deployed as = ${JSON.stringify(info)}`);
+  } else {
+    const accountTicketBuyer = await stdlib.newTestAccount(
+      buyerStartingBalance
+    );
+    // optin buyer of ticket/token
+    await optinToToken({
+      stdlib,
+      account: accountTicketBuyer,
+      token: ticketToken,
+    });
+    const info = await ask(
+      `Please paste the contract information:`,
+      JSON.parse
+    );
+    contract = accountTicketBuyer.attach(backend, info);
+  }
 
   if (isDeployer) {
     await backend.TicketProvider(contract, TicketProvider);
   } else {
     await backend.TicketBuyer(contract, TicketBuyer);
   }
-
-  const providerAccountBalanceA = await getAccountBalance(
-    accountTicketProvider
-  );
 };
 
 runProgram();
