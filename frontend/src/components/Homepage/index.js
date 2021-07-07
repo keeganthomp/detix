@@ -1,34 +1,37 @@
-import React from 'react'
-import WalletContext from 'contetxs/wallet'
-import { getAccountBalance } from 'lib/algod'
+import React from "react";
+import WalletContext from "contetxs/wallet";
+import { getAccountBalance } from "lib/algod";
 
-import AlgoSignerConnect from 'components/AlgoSignerConnect'
-import CreateAsaForm from 'components/CreateAsaForm'
+import AlgoSignerConnect from "components/AlgoSignerConnect";
+import CreateAsaForm from "components/CreateAsaForm";
+
+import Deployer from "components/Deployer";
+import Attacher from "components/Attacher";
 
 const Homepage = () => {
-  const { wallets } = React.useContext(WalletContext)
-  const [accountInfo, setAccountInfo] = React.useState(null)
-  const defaultWallet = wallets ? wallets[0] : null
+  const { wallets } = React.useContext(WalletContext);
+  const [accountInfo, setAccountInfo] = React.useState(null);
+  const defaultWallet = wallets ? wallets[0] : null;
 
   const asyncGetAccountInfo = async () => {
-    const accountInfo = await getAccountBalance(defaultWallet)
-    setAccountInfo(accountInfo)
-  }
+    const accountInfo = await getAccountBalance(defaultWallet);
+    setAccountInfo(accountInfo);
+  };
 
   React.useEffect(() => {
-    asyncGetAccountInfo()
-  }, [])
+    asyncGetAccountInfo();
+  }, []);
 
-  if (!accountInfo) return <p>Loading...</p>
+  if (!accountInfo) return <p>Loading...</p>;
 
-  const createdAssets = accountInfo['created-assets']
-  const { assets: assetsHeld } = accountInfo
+  const createdAssets = accountInfo["created-assets"];
+  const { assets: assetsHeld } = accountInfo;
 
   return (
     <div>
-      <h1>Homepage</h1>
       <AlgoSignerConnect />
       <CreateAsaForm />
+      {/* <h1>Homepage</h1>
       <div>
         <div>
           <h3>Created Tickets</h3>
@@ -69,9 +72,11 @@ const Homepage = () => {
             })}
           </div>
         </div>
-      </div>
+      </div> */}
+      <Deployer />
+      <Attacher />
     </div>
-  )
-}
+  );
+};
 
-export default Homepage
+export default Homepage;

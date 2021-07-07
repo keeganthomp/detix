@@ -1,8 +1,11 @@
 {
   "name": "@reach-sh/ticketing-system",
   "type": "module",
-  "prettier": { "arrowParens": "always" },
+  "prettier": {
+    "arrowParens": "always"
+  },
   "dependencies": {
+    "@reach-sh/stdlib": "^0.1.2-rc.65"
   },
   "author": "reach.sh",
   "license": "Apache-2.0",

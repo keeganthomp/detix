@@ -5,7 +5,7 @@ import { ask, yesno, done } from "@reach-sh/stdlib/ask.mjs";
 
 import optinToToken from "./helpers/optinToToken.mjs";
 
-const MAX_NUMBER_OF_TICKETS = 100;
+const MAX_NUMBER_OF_TICKETS = 10;
 const TICKET_PRICE = 1;
 
 const runProgram = async () => {
@@ -16,7 +16,7 @@ const runProgram = async () => {
 
   const fmt = (x) => stdlib.formatCurrency(x, 4);
   const getAccountBalance = async (who) => fmt(await stdlib.balanceOf(who));
-  const getTokenBalance = async (tokenX, who) => {
+  const getTicketBalance = async (tokenX, who) => {
     if (!tokenX) return;
     const amt = await tokenX.balanceOf(who);
     return `${fmt(amt)} ${tokenX.sym}`;
@@ -30,7 +30,7 @@ const runProgram = async () => {
     getMaxNumberOfTickets: () => {
       return MAX_NUMBER_OF_TICKETS;
     },
-    getToken: () => {
+    getTicket: () => {
       return ticketToken.id;
     },
     ticketPrice: stdlib.parseCurrency(TICKET_PRICE),
@@ -40,25 +40,27 @@ const runProgram = async () => {
 
   const TicketBuyer = {
     buyTicket: () => console.log("Buyer buys ticket"),
-    checkIfBuyingTicket: async (lastConsensusTime) => {
+    checkIfBuyingTicket: async (lastConsensusTimeBigInt, ticketsSoldBigInt) => {
       const currentNetworkTimeBigInt = await stdlib.getNetworkTime();
       const currentNetworkTime = stdlib.bigNumberToNumber(
         currentNetworkTimeBigInt
       );
-      console.log(
-        "last Consensus Time:",
-        stdlib.bigNumberToNumber(lastConsensusTime)
+      const ticketsSold = stdlib.bigNumberToNumber(ticketsSoldBigInt)
+      console.log('Tickets Sold', ticketsSold)
+      const lastConsensusTime = stdlib.bigNumberToNumber(
+        lastConsensusTimeBigInt
       );
-      console.log("current network time:", currentNetworkTime);
+      const isNow = currentNetworkTime - lastConsensusTime <= 1;
       const isBuyingTicket = await ask(`Do you want to buy a ticket?`, yesno);
       if (isBuyingTicket) return true;
+      console.log('Is in the past!')
       return false;
     },
     showAvailableTickets: (tickets) => {
       console.log("Tickets Remaining: ", stdlib.bigNumberToNumber(tickets));
     },
     log: (data) => {
-      console.log("DATA", stdlib.bigNumberToNumber(data));
+      console.log("Log: ", data);
     },
   };
 
@@ -86,6 +88,7 @@ const runProgram = async () => {
     const accountTicketBuyer = await stdlib.newTestAccount(
       buyerStartingBalance
     );
+    console.log('WOO',accountTicketBuyer.getAddress())
     // optin buyer of ticket/token
     await optinToToken({
       stdlib,

@@ -6,6 +6,7 @@ const AlgoSignerLogin = () => {
   const { setWallets } = React.useContext(WalletContext)
 
   const asyncConnectWallet = async () => {
+    console.log('WOO')
     try {
       await connectAlgoSigner()
       const accounts = await getAccounts()
