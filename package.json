@@ -2,7 +2,9 @@
   "name": "@reach-sh/ticketing-system",
   "type": "module",
   "prettier": {
-    "arrowParens": "always"
+    "arrowParens": "always",
+    "semi": false,
+    "singleQuote": true
   },
   "dependencies": {
     "@reach-sh/stdlib": "^0.1.2-rc.65"

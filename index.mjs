@@ -52,7 +52,7 @@ const runProgram = async () => {
       );
       const isNow = currentNetworkTime - lastConsensusTime <= 1;
       const isBuyingTicket = await ask(`Do you want to buy a ticket?`, yesno);
-      if (isBuyingTicket) return true;
+      if (isBuyingTicket && isNow) return true;
       console.log('Is in the past!')
       return false;
     },
